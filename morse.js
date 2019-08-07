@@ -13,7 +13,13 @@ const noSound = 0.000001;
 
 class Morse {
     constructor() {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (error) {
+            window.alert(
+                `Sorry, but your browser doesn't support the Web Audio API!`
+            );
+        }
         let t = this.ctx.currentTime;
         this.gainNode = this.ctx.createGain();
         // set audio to 
@@ -24,7 +30,7 @@ class Morse {
         this.oscillator.connect(this.gainNode);
         this.gainNode.connect(this.ctx.destination);
     }
-    tone(t,l) {
+    tone(t, l) {
         this.gainNode.gain.setValueAtTime(noSound, t)
         this.gainNode.gain.exponentialRampToValueAtTime(1, t + keyShape)
         t += l
@@ -56,16 +62,15 @@ class Morse {
         }
         return code_map[i]
     }
-    morse(code) {
+    morseCode(code) {
         let t = this.ctx.currentTime;
-        let that = this;
-        code.split("").forEach(function (letter) {
+        code.split("").forEach( letter => {
             switch (letter) {
                 case ".":
-                    t = that.tone(t, dit);
+                    t = this.tone(t, dit);
                     break;
                 case "-":
-                    t = that.tone(t, dah);
+                    t = this.tone(t, dah);
                     break;
                 case " ":
                     t += dah
@@ -73,10 +78,14 @@ class Morse {
             }
         });
         this.oscillator.start();
+        this.oscillator.stop(t);
+    }
+    morseText(text) {
+        let txt = text.toLowerCase();
     }
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
-      let morse = new Morse()
-      morse.morse("-.. .--- .---- - ..-.") 
+    let morse = new Morse()
+    morse.morseCode("-.. .--- .---- - ..-.")
 });
