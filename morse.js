@@ -1,4 +1,3 @@
-
 // target speed
 const wpmTarget = 12;
 const bpmTarget = wpmTarget * 5;
@@ -9,8 +8,6 @@ const oscillatorFrequency = 750;
 const keyShape = 0.003;
 const noSound = 0.000001;
 
-
-
 class Morse {
     constructor() {
         try {
@@ -20,24 +17,22 @@ class Morse {
                 `Sorry, but your browser doesn't support the Web Audio API!`
             );
         }
-        let t = this.ctx.currentTime;
         this.gainNode = this.ctx.createGain();
         // set audio to 
-        this.gainNode.gain.setValueAtTime(noSound, t);
         this.oscillator = this.ctx.createOscillator()
         this.oscillator.type = "sine";
         this.oscillator.frequency.value = oscillatorFrequency;
         this.oscillator.connect(this.gainNode);
         this.gainNode.connect(this.ctx.destination);
     }
-    tone(t, l) {
-        this.gainNode.gain.setValueAtTime(noSound, t)
-        this.gainNode.gain.exponentialRampToValueAtTime(1, t + keyShape)
-        t += l
-        this.gainNode.gain.setValueAtTime(1, t);
-        this.gainNode.gain.exponentialRampToValueAtTime(noSound, t + keyShape);
-        t += dit;
-        return t;
+    tone(time, l) {
+        this.gainNode.gain.setValueAtTime(noSound, time)
+        this.gainNode.gain.exponentialRampToValueAtTime(1, time + keyShape)
+        time += l
+        this.gainNode.gain.setValueAtTime(1, time);
+        this.gainNode.gain.exponentialRampToValueAtTime(noSound, time + keyShape);
+        time += dit;
+        return time;
     }
 
     toMorse(c) {
@@ -64,7 +59,7 @@ class Morse {
     }
     morseCode(code) {
         let t = this.ctx.currentTime;
-        code.split("").forEach( letter => {
+        code.split("").forEach(letter => {
             switch (letter) {
                 case ".":
                     t = this.tone(t, dit);
@@ -82,10 +77,12 @@ class Morse {
     }
     morseText(text) {
         let txt = text.toLowerCase();
+        console.log(`txt: ${txt}`);
     }
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
     let morse = new Morse()
-    morse.morseCode("-.. .--- .---- - ..-.")
+    morse.morseText("CQ CQ CQ DE DJ1TF");
+    //    morse.morseCode("-.. .--- .---- - ..-.")
 });
