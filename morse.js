@@ -1,5 +1,3 @@
-let AudioContext = window.AudioContext || window.webkitAudioContext;
-let ctx = new AudioContext();
 
 // target speed
 const wpmTarget = 12;
@@ -12,47 +10,6 @@ const keyShape = 0.003;
 const noSound = 0.000001;
 
 
-
-
-function tone(gainNode, t, l) {
-    gainNode.gain.setValueAtTime(noSound, t)
-    gainNode.gain.exponentialRampToValueAtTime(1, t + keyShape)
-    t += l
-
-    gainNode.gain.setValueAtTime(1, t);
-    gainNode.gain.exponentialRampToValueAtTime(noSound, t + keyShape);
-    t += dit;
-    return t;
-}
-
-function morse(code) {
-    let t = ctx.currentTime;
-
-    let oscillator = ctx.createOscillator()
-    oscillator.type = "sine";
-    oscillator.frequency.value = oscillatorFrequency;
-
-    let gainNode = ctx.createGain();
-    gainNode.gain.setValueAtTime(noSound, t);
-
-    code.split("").forEach(function (letter) {
-        switch (letter) {
-            case ".":
-                t = tone(gainNode, t, dit);
-                break;
-            case "-":
-                t = tone(gainNode, t, dah);
-                break;
-            case " ":
-                t += dah
-                break;
-        }
-    });
-
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    oscillator.start();
-}
 
 class Morse {
     constructor() {
@@ -67,6 +24,16 @@ class Morse {
         this.oscillator.connect(this.gainNode);
         this.gainNode.connect(this.ctx.destination);
     }
+    tone(t,l) {
+        this.gainNode.gain.setValueAtTime(noSound, t)
+        this.gainNode.gain.exponentialRampToValueAtTime(1, t + keyShape)
+        t += l
+        this.gainNode.gain.setValueAtTime(1, t);
+        this.gainNode.gain.exponentialRampToValueAtTime(noSound, t + keyShape);
+        t += dit;
+        return t;
+    }
+
     toMorse(c) {
         const code_map = {
             a: '.-', b: '-...', c: '-.-.', d: '-..',
@@ -95,10 +62,10 @@ class Morse {
         code.split("").forEach(function (letter) {
             switch (letter) {
                 case ".":
-                    t = tone(that.gainNode, t, dit);
+                    t = that.tone(t, dit);
                     break;
                 case "-":
-                    t = tone(that.gainNode, t, dah);
+                    t = that.tone(t, dah);
                     break;
                 case " ":
                     t += dah
@@ -110,8 +77,6 @@ class Morse {
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
- //   morse("-.. .--- .---- - ..-.");
       let morse = new Morse()
-      morse.morse("-.. .--- .---- - ..-.")
-      
+      morse.morse("-.. .--- .---- - ..-.") 
 });
