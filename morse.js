@@ -31,11 +31,11 @@ class Morse {
         time += l
         this.gainNode.gain.setValueAtTime(1, time);
         this.gainNode.gain.exponentialRampToValueAtTime(noSound, time + keyShape);
-        time += dit;
+        time += keyShape;
         return time;
     }
 
-    toMorse(c) {
+    toMorse(ch) {
         const code_map = {
             a: '.-', b: '-...', c: '-.-.', d: '-..',
             e: '.', f: '..-.', g: '--.', h: '....',
@@ -55,11 +55,16 @@ class Morse {
             '$': '...-..-', '!': '-.-.--', '@': '.--.-.',
             ' ': '/',
         }
-        return code_map[i]
+        return code_map[ch]
     }
     morseCode(code) {
         let t = this.ctx.currentTime;
-        code.split("").forEach(letter => {
+        console.log(`code: ${code}`)
+        let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
+        // we might have spaces added around word space, remove them for correct timing
+        let c = c1.replace(/\*\/\*/g, "/")
+        console.log(`c: ${c}`)
+        c.split("").forEach(letter => {
             switch (letter) {
                 case ".":
                     t = this.tone(t, dit);
@@ -67,8 +72,17 @@ class Morse {
                 case "-":
                     t = this.tone(t, dah);
                     break;
+                // space between each tone is 1 dit
+                case "*":
+                    t += dit;
+                    break;
+                // between character space is 3 dits (or one dah)    
                 case " ":
                     t += dah
+                    break;
+                // space between words is 7 dits    
+                case "/":
+                    t += 7 * dit;
                     break;
             }
         });
@@ -76,13 +90,19 @@ class Morse {
         this.oscillator.stop(t);
     }
     morseText(text) {
-        let txt = text.toLowerCase();
+        var txt = text.toLowerCase();
+
+        txt.trim();
+        txt = txt.replace(/./g, match => this.toMorse(match) + ' ' )
+        txt = txt.replace(/ \/ /g, "/");
+        txt.trim();
         console.log(`txt: ${txt}`);
+        this.morseCode(txt);
     }
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
-    let morse = new Morse()
+    let morse = new Morse();
     morse.morseText("CQ CQ CQ DE DJ1TF");
     //    morse.morseCode("-.. .--- .---- - ..-.")
 });
