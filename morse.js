@@ -12,6 +12,25 @@ const noSound = 0.000001;
 
 class Morse {
     constructor() {
+        this.oscillatorFrequency = oscillatorFrequency;
+        this.oscillatorType = "sine";
+    }
+
+    /**
+     * @param {number} f
+     */
+    set frequency(f) {
+        this.oscillatorFrequency = f;
+    }
+
+    /**
+     * @param {string} ty
+     */
+    set type(ty) {
+        this.oscillatorType = ty;
+    }
+
+    initialize() {
         try {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         } catch (error) {
@@ -22,11 +41,12 @@ class Morse {
         this.gainNode = this.ctx.createGain();
         // set audio to 
         this.oscillator = this.ctx.createOscillator()
-        this.oscillator.type = "sine";
-        this.oscillator.frequency.value = oscillatorFrequency;
+        this.oscillator.type = this.oscillatorType;
+        this.oscillator.frequency.value = this.oscillatorFrequency;
         this.oscillator.connect(this.gainNode);
         this.gainNode.connect(this.ctx.destination);
     }
+
     tone(time, l) {
         this.gainNode.gain.setValueAtTime(noSound, time)
         this.gainNode.gain.exponentialRampToValueAtTime(1, time + keyShape)
@@ -60,6 +80,7 @@ class Morse {
         return code_map[ch]
     }
     morseCode(code) {
+        this.initialize();
         let t = this.ctx.currentTime;
         console.log(`code: ${code}`)
         let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
@@ -90,6 +111,7 @@ class Morse {
         });
         this.oscillator.start();
         this.oscillator.stop(t);
+        return t;
     }
     morseText(text) {
         var txt = text.toLowerCase();
@@ -99,7 +121,7 @@ class Morse {
         txt = txt.replace(/ \/ /g, "/");
         txt.trim();
         console.log(`txt: ${txt}`);
-        this.morseCode(txt);
+        return this.morseCode(txt);
     }
 }
 
@@ -118,6 +140,20 @@ class MorseManic {
     playCurrentSymbol() {
         (new Morse()).morseText(this.currentSymbol)
     }
+
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async playErrorSound() {
+        let m = new Morse();
+        m.frequency = 90;
+        m.type = "sawtooth";
+        let t =  m.morseText("i")*1000;
+        await this.sleep(t);
+        this.playCurrentSymbol();
+    }
+
     processKeyInput(key) {
         let letter = key.toLowerCase();
         switch (letter) {
@@ -129,8 +165,9 @@ class MorseManic {
                     this.currentSymbol = this.getRandomSymbol();
                     this.playCurrentSymbol()
                 } else {
-                    console.log("ERROR!")
-                    this.playCurrentSymbol();
+                    let time = this.playErrorSound();
+
+
                 }
                 break;
         }
