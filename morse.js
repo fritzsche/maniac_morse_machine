@@ -8,6 +8,8 @@ const oscillatorFrequency = 750;
 const keyShape = 0.003;
 const noSound = 0.000001;
 
+
+
 class Morse {
     constructor() {
         try {
@@ -93,7 +95,7 @@ class Morse {
         var txt = text.toLowerCase();
 
         txt.trim();
-        txt = txt.replace(/./g, match => this.toMorse(match) + ' ' )
+        txt = txt.replace(/./g, match => this.toMorse(match) + ' ')
         txt = txt.replace(/ \/ /g, "/");
         txt.trim();
         console.log(`txt: ${txt}`);
@@ -101,8 +103,47 @@ class Morse {
     }
 }
 
+class MorseManic {
+    constructor() {
+        this.currentSymbol = this.getRandomSymbol();
+    }
+    getRandomSymbol() {
+        const morse_char = 'KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X';
+
+        return morse_char.charAt(this.getRandomInt(morse_char.length)).toLowerCase();
+    }
+    getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
+    playCurrentSymbol() {
+        (new Morse()).morseText(this.currentSymbol)
+    }
+    processKeyInput(key) {
+        let letter = key.toLowerCase();
+        switch (letter) {
+            case " ":
+                this.playCurrentSymbol();
+                break;
+            default:
+                if (letter === this.currentSymbol) {
+                    this.currentSymbol = this.getRandomSymbol();
+                    this.playCurrentSymbol()
+                } else {
+                    console.log("ERROR!")
+                    this.playCurrentSymbol();
+                }
+                break;
+        }
+    }
+
+}
+
 document.addEventListener("DOMContentLoaded", function (event) {
     let morse = new Morse();
-    morse.morseText("CQ CQ CQ DE DJ1TF");
+    let mm = new MorseManic();
+    document.getElementById("txt").addEventListener('keydown', e => mm.processKeyInput(e.key));
+    document.getElementById("txt").addEventListener('keyup', e => e.target.value = "");
+
+    // morse.morseText("CQ CQ CQ DE DJ1TF");
     //    morse.morseCode("-.. .--- .---- - ..-.")
 });
