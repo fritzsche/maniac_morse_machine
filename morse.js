@@ -1,12 +1,20 @@
-// target speed
-const wpmTarget = 12;
-const bpmTarget = wpmTarget * 5;
+ 
 const bpmDitSpeed = 60 * 100;
-const dit = bpmDitSpeed / bpmTarget / 1000;
-const dah = 3 * dit;
-
 const keyShape = 0.004;
 const noSound = 0.0001;
+
+// target speed
+const wpmTarget = 12;
+// target in bpm (Buchstaben pro Minute)
+const bpmTarget = wpmTarget * 5;
+
+
+const dit = bpmDitSpeed / bpmTarget / 1000;
+
+// a dah is 3 times the time of a dit
+const dah = 3 * dit;
+
+
 
 class Morse {
     constructor() {
@@ -182,7 +190,6 @@ class ManiacMorseMachine {
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
-    //    let morse = new Morse();
     var mmm = null;
     let formElement = document.getElementById("txt");
     formElement.focus();
@@ -200,7 +207,4 @@ document.addEventListener("DOMContentLoaded", function (event) {
         e.preventDefault();
         return false
     });
-
-    // morse.morseText("CQ CQ CQ DE DJ1TF");
-    //    morse.morseCode("-.. .--- .---- - ..-.")
 });
