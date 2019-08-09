@@ -91,11 +91,9 @@ class Morse {
         //  this.initialize();
         let t = this._ctx.currentTime;
         if (this._scheduleTime < t) this._scheduleTime = t;
-        console.log(`code: ${code}`)
         let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
         // we might have spaces added around word space, remove them for correct timing
         let c = c1.replace(/\*\/\*/g, "/")
-        console.log(`c: ${c}`)
         c.split("").forEach(letter => {
             switch (letter) {
                 case ".":
@@ -126,7 +124,6 @@ class Morse {
         txt = txt.replace(/./g, match => this.toMorse(match) + ' ')
         txt = txt.replace(/ \/ /g, "/");
         txt.trim();
-        console.log(`txt: ${txt}`);
         return this.morseCode(txt);
     }
 }
