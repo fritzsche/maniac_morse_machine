@@ -5,8 +5,8 @@ const bpmDitSpeed = 60 * 100;
 const dit = bpmDitSpeed / bpmTarget / 1000;
 const dah = 3 * dit;
 
-const keyShape = 0.003;
-const noSound = 0.000001;
+const keyShape = 0.004;
+const noSound = 0.0001;
 
 class Morse {
     constructor() {
@@ -37,29 +37,39 @@ class Morse {
     }
 
 
-    cancelSheduledAndMute(time) {
-        this._gain.gain.cancelScheduledValues(time)
-        this._oscillator.frequency.cancelScheduledValues(time)
-        this._errorOscillator.frequency.cancelScheduledValues(time)
-        this._gain.gain.setValueAtTime(noSound, time)
-        this._errorGain.gain.setValueAtTime(noSound, time)
+    cancelSheduledAndMute() {    
+        this._gain.gain.cancelScheduledValues(this._scheduleTime)
+        this._errorGain.gain.cancelScheduledValues(this._scheduleTime)
+        this._oscillator.frequency.cancelScheduledValues(this._scheduleTime)
+        this._errorOscillator.frequency.cancelScheduledValues(this._scheduleTime)
+        this._scheduleTime += keyShape
+        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)
+        this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)
+        this._scheduleTime += 0.3;
     }
 
     tone(len) {
-        this.cancelSheduledAndMute(this._scheduleTime);
-        this._gain.gain.exponentialRampToValueAtTime(1, this._scheduleTime + keyShape)
+        this._gain.gain.setValueAtTime(noSound, this._scheduleTime);
+        this._scheduleTime += keyShape;
+        this._gain.gain.exponentialRampToValueAtTime(1, this._scheduleTime)
         this._scheduleTime += len
         this._gain.gain.setValueAtTime(1, this._scheduleTime);
-        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime + keyShape);
         this._scheduleTime += keyShape;
+        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
     }
 
     errorSound() {
-        this._scheduleTime = this._ctx.currentTime;
-        this.cancelSheduledAndMute(this._scheduleTime);
-        this._errorGain.gain.exponentialRampToValueAtTime(1, this._scheduleTime + keyShape)
+        let t = this._ctx.currentTime;
+        if (this._scheduleTime > t) {
+            this._scheduleTime = this._ctx.currentTime;
+            this.cancelSheduledAndMute();
+        }
+        else
+            this._scheduleTime = t
+        this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime);
         this._scheduleTime += keyShape
-        this._scheduleTime += 0.5;
+        this._errorGain.gain.exponentialRampToValueAtTime(1, this._scheduleTime)
+        this._scheduleTime += 0.2;
         this._errorGain.gain.setValueAtTime(1, this._scheduleTime);
         this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime + keyShape);
         this._scheduleTime += keyShape + 0.5;
@@ -90,7 +100,10 @@ class Morse {
     morseCode(code) {
         //  this.initialize();
         let t = this._ctx.currentTime;
-        if (this._scheduleTime < t) this._scheduleTime = t;
+        if (this._scheduleTime < t)
+            this._scheduleTime = t;
+        else
+            this.cancelSheduledAndMute();
         let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
         // we might have spaces added around word space, remove them for correct timing
         let c = c1.replace(/\*\/\*/g, "/")
@@ -147,6 +160,7 @@ class MorseManic {
     }
 
     processKeyInput(key) {
+        if (!key) return;
         let letter = key.toLowerCase();
         if (this._allSymbols.indexOf(letter) === -1 && letter !== " ") return;
         switch (letter) {
@@ -172,17 +186,18 @@ document.addEventListener("DOMContentLoaded", function (event) {
     var mm = null;
     document.getElementById("txt").addEventListener('keydown', e => {
         // we can just start sound after first event
-         if (!mm) mm =  new MorseManic();
-         mm.processKeyInput(e.key);
-         e.preventDefault();
-         return false;
-        }
-         );
+        if (!mm) mm = new MorseManic();
+        mm.processKeyInput(e.key);
+        e.preventDefault();
+        return false;
+    }
+    );
     document.getElementById("txt").addEventListener('keyup', e => {
-         e.target.value = ""; 
-         e.target.focus(); 
-         e.preventDefault();
-         return false });
+        e.target.value = "";
+        e.target.focus();
+        e.preventDefault();
+        return false
+    });
 
     // morse.morseText("CQ CQ CQ DE DJ1TF");
     //    morse.morseCode("-.. .--- .---- - ..-.")
