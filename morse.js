@@ -136,7 +136,7 @@ class Morse {
     }
 }
 
-class MorseManic {
+class ManiacMorseMachine {
     constructor() {
         this._allSymbols = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X".toLowerCase();
         this._currentSymbol = this.getRandomSymbol();
@@ -183,13 +183,13 @@ class MorseManic {
 
 document.addEventListener("DOMContentLoaded", function (event) {
     //    let morse = new Morse();
-    var mm = null;
+    var mmm = null;
     let formElement = document.getElementById("txt");
     formElement.focus();
     formElement.addEventListener('keydown', e => {
         // we can just start sound after first event
-        if (!mm) mm = new MorseManic();
-        mm.processKeyInput(e.key);
+        if (!mmm) mmm = new ManiacMorseMachine();
+        mmm.processKeyInput(e.key);
         e.preventDefault();
         return false;
     }
