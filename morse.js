@@ -172,8 +172,10 @@ class MorseManic {
 
 document.addEventListener("DOMContentLoaded", function (event) {
     //    let morse = new Morse();
-    let mm = new MorseManic();
+    var mm = null;
     document.getElementById("txt").addEventListener('keydown', e => {
+        // we can just start sound after first event
+         if (!mm) mm =  new MorseManic();
          mm.processKeyInput(e.key);
          e.preventDefault();
          return false;
