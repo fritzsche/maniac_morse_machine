@@ -8,7 +8,7 @@ const oscillatorFrequency = 750;
 const keyShape = 0.003;
 const noSound = 0.000001;
 
-
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 class Morse {
     constructor() {
@@ -31,13 +31,7 @@ class Morse {
     }
 
     initialize() {
-        try {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (error) {
-            window.alert(
-                `Sorry, but your browser doesn't support the Web Audio API!`
-            );
-        }
+        this.ctx = audioCtx;
         this.gainNode = this.ctx.createGain();
         // set audio to 
         this.oscillator = this.ctx.createOscillator()
