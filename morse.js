@@ -4,51 +4,65 @@ const bpmTarget = wpmTarget * 5;
 const bpmDitSpeed = 60 * 100;
 const dit = bpmDitSpeed / bpmTarget / 1000;
 const dah = 3 * dit;
-const oscillatorFrequency = 750;
+
 const keyShape = 0.003;
 const noSound = 0.000001;
 
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
 class Morse {
     constructor() {
-        this.oscillatorFrequency = oscillatorFrequency;
-        this.oscillatorType = "sine";
-    }
+        this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this._scheduleTime = this._ctx.currentTime;
 
-    /**
-     * @param {number} f
-     */
-    set frequency(f) {
-        this.oscillatorFrequency = f;
-    }
-
-    /**
-     * @param {string} ty
-     */
-    set type(ty) {
-        this.oscillatorType = ty;
-    }
-
-    initialize() {
-        this.ctx = audioCtx;
-        this.gainNode = this.ctx.createGain();
         // set audio to 
-        this.oscillator = this.ctx.createOscillator()
-        this.oscillator.type = this.oscillatorType;
-        this.oscillator.frequency.value = this.oscillatorFrequency;
-        this.oscillator.connect(this.gainNode);
-        this.gainNode.connect(this.ctx.destination);
+
+        this._errorGain = this._ctx.createGain();
+        this._errorGain.gain.value = noSound;
+        this._errorGain.connect(this._ctx.destination);
+
+        this._errorOscillator = this._ctx.createOscillator()
+        this._errorOscillator.type = "sawtooth"
+        this._errorOscillator.frequency.value = 100;
+        this._errorOscillator.connect(this._errorGain);
+        this._errorOscillator.start();
+
+        this._gain = this._ctx.createGain();
+        this._gain.gain.value = noSound;
+        this._gain.connect(this._ctx.destination);
+
+        this._oscillator = this._ctx.createOscillator()
+        this._oscillator.type = "sine";
+        this._oscillator.frequency.value = 750;
+        this._oscillator.connect(this._gain);
+        this._oscillator.start();
     }
 
-    tone(time, l) {
-        this.gainNode.gain.setValueAtTime(noSound, time)
-        this.gainNode.gain.exponentialRampToValueAtTime(1, time + keyShape)
-        time += l
-        this.gainNode.gain.setValueAtTime(1, time);
-        this.gainNode.gain.exponentialRampToValueAtTime(noSound, time + keyShape);
-        time += keyShape;
-        return time;
+
+    cancelSheduledAndMute(time) {
+        this._gain.gain.cancelScheduledValues(time)
+        this._oscillator.frequency.cancelScheduledValues(time)
+        this._errorOscillator.frequency.cancelScheduledValues(time)
+        this._gain.gain.setValueAtTime(noSound, time)
+        this._errorGain.gain.setValueAtTime(noSound, time)
+    }
+
+    tone(len) {
+        this.cancelSheduledAndMute(this._scheduleTime);
+        this._gain.gain.exponentialRampToValueAtTime(1, this._scheduleTime + keyShape)
+        this._scheduleTime += len
+        this._gain.gain.setValueAtTime(1, this._scheduleTime);
+        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime + keyShape);
+        this._scheduleTime += keyShape;
+    }
+
+    errorSound() {
+        this._scheduleTime = this._ctx.currentTime;
+        this.cancelSheduledAndMute(this._scheduleTime);
+        this._errorGain.gain.exponentialRampToValueAtTime(1, this._scheduleTime + keyShape)
+        this._scheduleTime += keyShape
+        this._scheduleTime += 0.5;
+        this._errorGain.gain.setValueAtTime(1, this._scheduleTime);
+        this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime + keyShape);
+        this._scheduleTime += keyShape + 0.5;
     }
 
     toMorse(ch) {
@@ -74,9 +88,9 @@ class Morse {
         return code_map[ch]
     }
     morseCode(code) {
-        this.initialize();
-        let t = this.ctx.currentTime;
-        let startTime = t;
+        //  this.initialize();
+        let t = this._ctx.currentTime;
+        if (this._scheduleTime < t) this._scheduleTime = t;
         console.log(`code: ${code}`)
         let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
         // we might have spaces added around word space, remove them for correct timing
@@ -85,28 +99,25 @@ class Morse {
         c.split("").forEach(letter => {
             switch (letter) {
                 case ".":
-                    t = this.tone(t, dit);
+                    this.tone(dit);
                     break;
                 case "-":
-                    t = this.tone(t, dah);
+                    this.tone(dah);
                     break;
                 // space between each tone is 1 dit
                 case "*":
-                    t += dit;
+                    this._scheduleTime += dit;
                     break;
                 // between character space is 3 dits (or one dah)    
                 case " ":
-                    t += dah
+                    this._scheduleTime += dah
                     break;
                 // space between words is 7 dits    
                 case "/":
-                    t += 7 * dit;
+                    this._scheduleTime += 7 * dit;
                     break;
             }
         });
-        this.oscillator.start();
-        this.oscillator.stop(t);
-        return t-startTime;
     }
     morseText(text) {
         var txt = text.toLowerCase();
@@ -122,47 +133,36 @@ class Morse {
 
 class MorseManic {
     constructor() {
-        this.currentSymbol = this.getRandomSymbol();
+        this._allSymbols = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X".toLowerCase();
+        this._currentSymbol = this.getRandomSymbol();
+        this._morse = new Morse();
     }
     getRandomSymbol() {
-        const morse_char = 'KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X';
-
-        return morse_char.charAt(this.getRandomInt(morse_char.length)).toLowerCase();
+        return this._allSymbols.charAt(
+            this.getRandomInt(this._allSymbols.length)
+        ).toLowerCase();
     }
     getRandomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
     }
     playCurrentSymbol() {
-        (new Morse()).morseText(this.currentSymbol)
-    }
-
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async playErrorSound() {
-        let m = new Morse();
-        m.frequency = 90;
-        m.type = "sawtooth";
-        let t =  m.morseText("i")*1000;
-        await this.sleep(t);
-        this.playCurrentSymbol();
+        this._morse.morseText(this._currentSymbol)
     }
 
     processKeyInput(key) {
         let letter = key.toLowerCase();
+        if (this._allSymbols.indexOf(letter) === -1 && letter !== " ") return;
         switch (letter) {
             case " ":
                 this.playCurrentSymbol();
                 break;
             default:
-                if (letter === this.currentSymbol) {
-                    this.currentSymbol = this.getRandomSymbol();
+                if (letter === this._currentSymbol) {
+                    this._currentSymbol = this.getRandomSymbol();
                     this.playCurrentSymbol()
                 } else {
-                    let time = this.playErrorSound();
-
-
+                    this._morse.errorSound()
+                    this.playCurrentSymbol()
                 }
                 break;
         }
@@ -171,10 +171,19 @@ class MorseManic {
 }
 
 document.addEventListener("DOMContentLoaded", function (event) {
-    let morse = new Morse();
+    //    let morse = new Morse();
     let mm = new MorseManic();
-    document.getElementById("txt").addEventListener('keydown', e => mm.processKeyInput(e.key));
-    document.getElementById("txt").addEventListener('keyup', e => e.target.value = "");
+    document.getElementById("txt").addEventListener('keydown', e => {
+         mm.processKeyInput(e.key);
+         e.preventDefault();
+         return false;
+        }
+         );
+    document.getElementById("txt").addEventListener('keyup', e => {
+         e.target.value = ""; 
+         e.target.focus(); 
+         e.preventDefault();
+         return false });
 
     // morse.morseText("CQ CQ CQ DE DJ1TF");
     //    morse.morseCode("-.. .--- .---- - ..-.")
