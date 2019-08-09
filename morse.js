@@ -37,15 +37,18 @@ class Morse {
     }
 
 
-    cancelSheduledAndMute() {    
-        this._gain.gain.cancelScheduledValues(this._scheduleTime)
-        this._errorGain.gain.cancelScheduledValues(this._scheduleTime)
-        this._oscillator.frequency.cancelScheduledValues(this._scheduleTime)
-        this._errorOscillator.frequency.cancelScheduledValues(this._scheduleTime)
-        this._scheduleTime += keyShape
-        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)
-        this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)
-        this._scheduleTime += 0.3;
+    cancelSheduledAndMute() {
+        let origSchedule = this._scheduleTime;
+        this._scheduleTime = this._ctx.currentTime;
+        if (origSchedule >= this._scheduleTime) {
+            this._scheduleTime = this._ctx.currentTime;
+            this._gain.gain.cancelScheduledValues(this._scheduleTime)
+            this._errorGain.gain.cancelScheduledValues(this._scheduleTime)
+            this._scheduleTime += keyShape
+            this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)
+            this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)
+            this._scheduleTime += 0.2;
+        }
     }
 
     tone(len) {
@@ -59,20 +62,18 @@ class Morse {
     }
 
     errorSound() {
-        let t = this._ctx.currentTime;
-        if (this._scheduleTime > t) {
-            this._scheduleTime = this._ctx.currentTime;
-            this.cancelSheduledAndMute();
-        }
-        else
-            this._scheduleTime = t
-        this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime);
+        this.cancelSheduledAndMute();
+
+        this._scheduleTime += 0.3;
+        this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime)
         this._scheduleTime += keyShape
         this._errorGain.gain.exponentialRampToValueAtTime(1, this._scheduleTime)
         this._scheduleTime += 0.2;
         this._errorGain.gain.setValueAtTime(1, this._scheduleTime);
-        this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime + keyShape);
-        this._scheduleTime += keyShape + 0.5;
+        this._scheduleTime += keyShape;
+        this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
+        this._scheduleTime += 0.2;
+        this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime);
     }
 
     toMorse(ch) {
@@ -98,12 +99,6 @@ class Morse {
         return code_map[ch]
     }
     morseCode(code) {
-        //  this.initialize();
-        let t = this._ctx.currentTime;
-        if (this._scheduleTime < t)
-            this._scheduleTime = t;
-        else
-            this.cancelSheduledAndMute();
         let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
         // we might have spaces added around word space, remove them for correct timing
         let c = c1.replace(/\*\/\*/g, "/")
@@ -159,18 +154,23 @@ class MorseManic {
         this._morse.morseText(this._currentSymbol)
     }
 
+    playCurrentSymbolNow() {
+        this._morse.cancelSheduledAndMute( );
+        this.playCurrentSymbol()
+    }
+
     processKeyInput(key) {
         if (!key) return;
         let letter = key.toLowerCase();
         if (this._allSymbols.indexOf(letter) === -1 && letter !== " ") return;
         switch (letter) {
             case " ":
-                this.playCurrentSymbol();
+                this.playCurrentSymbolNow();
                 break;
             default:
                 if (letter === this._currentSymbol) {
                     this._currentSymbol = this.getRandomSymbol();
-                    this.playCurrentSymbol()
+                    this.playCurrentSymbolNow()
                 } else {
                     this._morse.errorSound()
                     this.playCurrentSymbol()
@@ -184,7 +184,9 @@ class MorseManic {
 document.addEventListener("DOMContentLoaded", function (event) {
     //    let morse = new Morse();
     var mm = null;
-    document.getElementById("txt").addEventListener('keydown', e => {
+    let formElement = document.getElementById("txt");
+    formElement.focus();
+    formElement.addEventListener('keydown', e => {
         // we can just start sound after first event
         if (!mm) mm = new MorseManic();
         mm.processKeyInput(e.key);
@@ -192,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         return false;
     }
     );
-    document.getElementById("txt").addEventListener('keyup', e => {
+    formElement.addEventListener('keyup', e => {
         e.target.value = "";
         e.target.focus();
         e.preventDefault();
