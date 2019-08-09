@@ -76,6 +76,7 @@ class Morse {
     morseCode(code) {
         this.initialize();
         let t = this.ctx.currentTime;
+        let startTime = t;
         console.log(`code: ${code}`)
         let c1 = code.replace(/\S*/g, match => match.split("").join("*"))
         // we might have spaces added around word space, remove them for correct timing
@@ -105,7 +106,7 @@ class Morse {
         });
         this.oscillator.start();
         this.oscillator.stop(t);
-        return t;
+        return t-startTime;
     }
     morseText(text) {
         var txt = text.toLowerCase();
