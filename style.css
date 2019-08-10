@@ -4,7 +4,27 @@ body {
     color: #ccc;
   }
 
-  h1 {
+h1 {
     color: rgb(28, 161, 202);
     text-decoration: none;
 }
+
+
+
+
+input[type='range'] {
+    -webkit-appearance: none;
+    background-color: gray;
+    height: 20px;
+    border-radius: 15px;
+    padding: 0 3px;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    vertical-align: middle;
+    -webkit-appearance: none;
+    background-color: #444;
+    width: 16px;
+    height: 16px;
+    border-radius: 16px;
+  }  

@@ -1,32 +1,33 @@
-// at a speed of 100 cpm (character per minute) a dit has 60ms length
-// length of one dit in s = ( 60ms * 100 ) / 1000
-const cpmDitSpeed = ( 60 * 100 ) / 1000;
+
 
 
 const keyShape = 0.004;
 const noSound = 0.0001;
 
-// target in cpm (character per minute)
-const cpmTarget = 60;
+// character per minute
+const cpm = 60;
 
-const dit = cpmDitSpeed / cpmTarget;
+//const dit = cpmDitSpeed / cpm;
 
 // a dah is 3 times the time of a dit
-const dah = 3 * dit;
+//const dah = 3 * dit;
 
 
 
 class Morse {
-    constructor() {
+    constructor(cpm = 60) {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
         // set audio to 
 
         this._errorGain = Morse.initGain(this._ctx);
-        this._errorOscillator = Morse.initOscillator(this._ctx,"sawtooth",100,this._errorGain);
+        this._errorOscillator = Morse.initOscillator(this._ctx, "sawtooth", 100, this._errorGain);
 
-        this._gain = Morse.initGain(this._ctx);       
-        this._oscillator = Morse.initOscillator(this._ctx,"sine",750,this._gain);
+        this._gain = Morse.initGain(this._ctx);
+        this._oscillator = Morse.initOscillator(this._ctx, "sine", 750, this._gain);
+
+        this._cpm = cpm;
+
     }
 
     static initGain(ctx) {
@@ -36,7 +37,7 @@ class Morse {
         return gain;
     }
 
-    static initOscillator(ctx,type,frequency,gain) {
+    static initOscillator(ctx, type, frequency, gain) {
         let oscillator = ctx.createOscillator()
         oscillator.type = type;
         oscillator.frequency.value = frequency;
@@ -50,7 +51,24 @@ class Morse {
     }
 
     static cpmToWpm(cpm) {
-        return cpm / 5; 
+        return cpm / 5;
+    }
+
+    set cpm(cpm) {
+        this.cancelSheduledAndMute();
+        this._cpm = cpm; 
+    }
+
+    get _dit() {
+        // at a speed of 100 cpm (character per minute) a dit has 60ms length
+        // length of one dit in s = ( 60ms * 100 ) / 1000
+        const cpmDitSpeed = (60 * 100) / 1000;
+        return cpmDitSpeed / this._cpm;
+    }
+
+
+    get _dah() {
+        return 3 * this._dit;
     }
 
     cancelSheduledAndMute() {
@@ -121,22 +139,22 @@ class Morse {
         c.split("").forEach(letter => {
             switch (letter) {
                 case ".":
-                    this.tone(dit);
+                    this.tone(this._dit);
                     break;
                 case "-":
-                    this.tone(dah);
+                    this.tone(this._dah);
                     break;
                 // space between each tone is 1 dit
                 case "*":
-                    this._scheduleTime += dit;
+                    this._scheduleTime += this._dit;
                     break;
                 // between character space is 3 dits (or one dah)    
                 case " ":
-                    this._scheduleTime += dah
+                    this._scheduleTime += this._dah
                     break;
                 // space between words is 7 dits    
                 case "/":
-                    this._scheduleTime += 7 * dit;
+                    this._scheduleTime += 7 * this._dit;
                     break;
             }
         });
@@ -153,10 +171,10 @@ class Morse {
 }
 
 class ManiacMorseMachine {
-    constructor() {
+    constructor(cpm = 60) {
         this._allSymbols = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X".toLowerCase();
         this._currentSymbol = this.getRandomSymbol();
-        this._morse = new Morse();
+        this._morse = new Morse(cpm);
     }
     getRandomSymbol() {
         return this._allSymbols.charAt(
@@ -173,6 +191,10 @@ class ManiacMorseMachine {
     playCurrentCharacterNow() {
         this._morse.cancelSheduledAndMute();
         this.playCurrentCharacter()
+    }
+
+    set cpm(cpm) {
+        this._morse.cpm = cpm;
     }
 
     processKeyInput(key) {
@@ -197,22 +219,42 @@ class ManiacMorseMachine {
 
 }
 
+
+
 document.addEventListener("DOMContentLoaded", function (event) {
     var mmm = null;
-    let formElement = document.getElementById("txt");
-    formElement.focus();
-    formElement.addEventListener('keydown', e => {
+
+    const cpmKey = "CpM";
+
+    const getCpM = () => localStorage.getItem(cpmKey) || 60
+
+
+    let cpMInputField = document.getElementById("cpm");
+// configuration for character per minute
+    let cpm = getCpM();
+    cpMInputField.value = cpm;
+    cpMInputField.addEventListener('change', e => {
+        let cpm = e.target.value;
+        if (mmm) mmm.cpm = cpm;
+        localStorage.setItem(cpmKey, cpm);
+    })
+
+
+    let morseInputField = document.getElementById("txt");
+    morseInputField.focus();
+    morseInputField.addEventListener('keydown', e => {
         // we can just start sound after first event
-        if (!mmm) mmm = new ManiacMorseMachine();
+        cpm = getCpM();
+        if (!mmm) mmm = new ManiacMorseMachine(cpm);
         mmm.processKeyInput(e.key);
         e.preventDefault();
-        return false;
     }
     );
-    formElement.addEventListener('keyup', e => {
+    morseInputField.addEventListener('keyup', e => {
         e.target.value = "";
         e.target.focus();
         e.preventDefault();
-        return false
     });
+
+
 });
