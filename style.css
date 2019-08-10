@@ -1,0 +1,10 @@
+body {
+    background: black;
+    font-family: 'Open Sans', sans-serif;
+    color: #ccc;
+  }
+
+  h1 {
+    color: rgb(28, 161, 202);
+    text-decoration: none;
+}

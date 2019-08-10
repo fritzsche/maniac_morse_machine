@@ -1,15 +1,15 @@
- 
-const bpmDitSpeed = 60 * 100;
+// at a speed of 100 cpm (character per minute) a dit has 60ms length
+// length of one dit in s = ( 60ms * 100 ) / 1000
+const cpmDitSpeed = ( 60 * 100 ) / 1000;
+
+
 const keyShape = 0.004;
 const noSound = 0.0001;
 
-// target speed
-const wpmTarget = 12;
-// target in bpm (Buchstaben pro Minute)
-const bpmTarget = wpmTarget * 5;
+// target in cpm (character per minute)
+const cpmTarget = 60;
 
-
-const dit = bpmDitSpeed / bpmTarget / 1000;
+const dit = cpmDitSpeed / cpmTarget;
 
 // a dah is 3 times the time of a dit
 const dah = 3 * dit;
@@ -20,30 +20,38 @@ class Morse {
     constructor() {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
-
         // set audio to 
 
-        this._errorGain = this._ctx.createGain();
-        this._errorGain.gain.value = noSound;
-        this._errorGain.connect(this._ctx.destination);
+        this._errorGain = Morse.initGain(this._ctx);
+        this._errorOscillator = Morse.initOscillator(this._ctx,"sawtooth",100,this._errorGain);
 
-        this._errorOscillator = this._ctx.createOscillator()
-        this._errorOscillator.type = "sawtooth"
-        this._errorOscillator.frequency.value = 100;
-        this._errorOscillator.connect(this._errorGain);
-        this._errorOscillator.start();
-
-        this._gain = this._ctx.createGain();
-        this._gain.gain.value = noSound;
-        this._gain.connect(this._ctx.destination);
-
-        this._oscillator = this._ctx.createOscillator()
-        this._oscillator.type = "sine";
-        this._oscillator.frequency.value = 750;
-        this._oscillator.connect(this._gain);
-        this._oscillator.start();
+        this._gain = Morse.initGain(this._ctx);       
+        this._oscillator = Morse.initOscillator(this._ctx,"sine",750,this._gain);
     }
 
+    static initGain(ctx) {
+        let gain = ctx.createGain();
+        gain.gain.value = noSound;
+        gain.connect(ctx.destination);
+        return gain;
+    }
+
+    static initOscillator(ctx,type,frequency,gain) {
+        let oscillator = ctx.createOscillator()
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+        oscillator.connect(gain);
+        oscillator.start();
+        return oscillator;
+    }
+
+    static wpmToCpm(wpm) {
+        return wpm * 5;
+    }
+
+    static cpmToWpm(cpm) {
+        return cpm / 5; 
+    }
 
     cancelSheduledAndMute() {
         let origSchedule = this._scheduleTime;
@@ -158,13 +166,13 @@ class ManiacMorseMachine {
     getRandomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
     }
-    playCurrentSymbol() {
+    playCurrentCharacter() {
         this._morse.morseText(this._currentSymbol)
     }
 
-    playCurrentSymbolNow() {
-        this._morse.cancelSheduledAndMute( );
-        this.playCurrentSymbol()
+    playCurrentCharacterNow() {
+        this._morse.cancelSheduledAndMute();
+        this.playCurrentCharacter()
     }
 
     processKeyInput(key) {
@@ -173,15 +181,15 @@ class ManiacMorseMachine {
         if (this._allSymbols.indexOf(letter) === -1 && letter !== " ") return;
         switch (letter) {
             case " ":
-                this.playCurrentSymbolNow();
+                this.playCurrentCharacterNow();
                 break;
             default:
                 if (letter === this._currentSymbol) {
                     this._currentSymbol = this.getRandomSymbol();
-                    this.playCurrentSymbolNow()
+                    this.playCurrentCharacterNow()
                 } else {
                     this._morse.errorSound()
-                    this.playCurrentSymbol()
+                    this.playCurrentCharacter()
                 }
                 break;
         }
