@@ -9,8 +9,24 @@ h1 {
     text-decoration: none;
 }
 
+#chars button[data-active="true"] {
+  background-color: rgb(28, 161, 202);
+}
 
-
+#chars button {
+  background-color: gray;
+  border: none;
+  width:40px;
+  height: 40px;
+  margin: 5px;
+  color: white;
+  padding: 10px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.2em;
+  border-radius: 10px;
+}
 
 input[type='range'] {
     -webkit-appearance: none;

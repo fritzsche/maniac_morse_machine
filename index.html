@@ -10,7 +10,7 @@
 <body>
   <h1>Maniac Morse Machine</h1>
   <div>
-    <p>Start and repeat last morse code by pressing the SPACE key.</p>
+    <p>Start or repeat the last morse code by pressing SPACE.</p>
   </div>
   <!---  <form autocomplete="off"> -->
   <div>
@@ -20,11 +20,18 @@
     <p>
       <!-- <Frequency: <input id="frequency" type="number" min="500" max="1000" step="1" value="750"
     oninput="sample.changeFrequency(this.value);"> -->
-      CpM: <input id="cpm" type="number" min="40" max="200" step="10" value="60">
-
+      Char per Min: <input id="cpm" type="number" min="40" max="200" step="10" value="60">
     </p>
   </div>
+  <div>
+    <p>
+      Characters:
+      <p id="chars">
 
+      </p>
+    </p>            
+
+  </div>
   <!-- </form> -->
   <script src="morse.js"></script>
 </body>

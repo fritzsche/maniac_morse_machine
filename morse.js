@@ -56,7 +56,7 @@ class Morse {
 
     set cpm(cpm) {
         this.cancelSheduledAndMute();
-        this._cpm = cpm; 
+        this._cpm = cpm;
     }
 
     get _dit() {
@@ -171,25 +171,30 @@ class Morse {
 }
 
 class ManiacMorseMachine {
-    constructor(cpm = 60) {
-        this._allSymbols = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X".toLowerCase();
-        this._currentSymbol = this.getRandomSymbol();
+    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X") {
+        this._allCharacters = active.toLowerCase();
+        this.selectRandomCharacter();
         this._morse = new Morse(cpm);
     }
-    getRandomSymbol() {
-        return this._allSymbols.charAt(
-            this.getRandomInt(this._allSymbols.length)
+    selectRandomCharacter() {
+        this._currentCharacter = this._allCharacters.charAt(
+            this.getRandomInt(this._allCharacters.length)
         ).toLowerCase();
     }
     getRandomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
     }
+
+    stopSound() {
+        this._morse.cancelSheduledAndMute();
+    }
+
     playCurrentCharacter() {
-        this._morse.morseText(this._currentSymbol)
+        this._morse.morseText(this._currentCharacter)
     }
 
     playCurrentCharacterNow() {
-        this._morse.cancelSheduledAndMute();
+        this.stopSound();
         this.playCurrentCharacter()
     }
 
@@ -197,17 +202,24 @@ class ManiacMorseMachine {
         this._morse.cpm = cpm;
     }
 
+
+    set activeCharacter(active) {
+        this.stopSound();
+        this._allCharacters = active.toLowerCase();
+        this.selectRandomCharacter();
+    }
+
     processKeyInput(key) {
         if (!key) return;
         let letter = key.toLowerCase();
-        if (this._allSymbols.indexOf(letter) === -1 && letter !== " ") return;
+        if (this._allCharacters.indexOf(letter) === -1 && letter !== " ") return;
         switch (letter) {
             case " ":
                 this.playCurrentCharacterNow();
                 break;
             default:
-                if (letter === this._currentSymbol) {
-                    this._currentSymbol = this.getRandomSymbol();
+                if (letter === this._currentCharacter) {
+                    this.selectRandomCharacter();
                     this.playCurrentCharacterNow()
                 } else {
                     this._morse.errorSound()
@@ -227,10 +239,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
     const cpmKey = "CpM";
 
     const getCpM = () => localStorage.getItem(cpmKey) || 60
-
+    const getActiveChars = () => localStorage.getItem("activeChar") || "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     let cpMInputField = document.getElementById("cpm");
-// configuration for character per minute
+
+    // configuration for character per minute
     let cpm = getCpM();
     cpMInputField.value = cpm;
     cpMInputField.addEventListener('change', e => {
@@ -244,8 +257,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     morseInputField.focus();
     morseInputField.addEventListener('keydown', e => {
         // we can just start sound after first event
-        cpm = getCpM();
-        if (!mmm) mmm = new ManiacMorseMachine(cpm);
+        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars());
         mmm.processKeyInput(e.key);
         e.preventDefault();
     }
@@ -256,5 +268,55 @@ document.addEventListener("DOMContentLoaded", function (event) {
         e.preventDefault();
     });
 
+
+    const updateActiveChars = (active) => {
+        localStorage.setItem("activeChar", active);
+        document.querySelectorAll("#chars button").forEach(
+            domElement => {
+                let ch = domElement.innerHTML;
+                if (activeChars.indexOf(ch) === -1) domElement.removeAttribute('data-active');
+                else domElement.setAttribute('data-active', 'true');
+            }
+        )
+
+    }
+
+    var activeChars = getActiveChars();
+    let chars = document.getElementById("chars");
+    const allCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?/";
+    allCharacters.split("").forEach(letter => {
+        var button = document.createElement("button");
+        if (activeChars.indexOf(letter) !== -1) button.setAttribute('data-active', 'true');
+        button.addEventListener('click', event => {
+            let ch = event.target.innerHTML;
+            if (activeChars.indexOf(ch) === -1) activeChars += ch; else activeChars = activeChars.replace(ch, "");
+            updateActiveChars(activeChars);
+            if(mmm) mmm.activeCharacter = activeChars;
+            document.getElementById("txt").focus();
+            event.preventDefault();
+        })
+        var node = document.createTextNode(letter);
+        button.appendChild(node);
+        chars.appendChild(button);
+    })
+
+    /*
+    
+        updateActiveChars();
+    
+        document.querySelectorAll("#chars button").forEach( 
+             domElement => { 
+                 let ch = domElement.innerHTML;
+                 if (activeChars.indexOf(ch) === -1) domElement.removeAttribute('data-active');
+                  else domElement.setAttribute('data-active', 'true');
+                 domElement.addEventListener('click',event =>{
+                     console.log("Click");
+    
+                     document.getElementById("txt").focus();
+                     event.preventDefault();
+                 })
+            }
+        )
+    */
 
 });
