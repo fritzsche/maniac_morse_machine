@@ -7,6 +7,11 @@ body {
 h1 {
     color: rgb(28, 161, 202);
     text-decoration: none;
+    font-size: 1.4em;
+}
+
+.explain {
+ font-size: 0.9em;
 }
 
 #chars button[data-active="true"] {
@@ -16,16 +21,16 @@ h1 {
 #chars button {
   background-color: gray;
   border: none;
-  width:40px;
-  height: 40px;
+  width:28px;
+  height: 28px;
   margin: 3px;
   color: white;
-  padding: 5px 5px;
+  padding: 3px 3px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 1.2em;
-  border-radius: 10px;
+  font-size: 1.1em;
+  border-radius: 7px;
 }
 
 
