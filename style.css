@@ -27,20 +27,3 @@ h1 {
   font-size: 1.2em;
   border-radius: 10px;
 }
-
-input[type='range'] {
-    -webkit-appearance: none;
-    background-color: gray;
-    height: 20px;
-    border-radius: 15px;
-    padding: 0 3px;
-  }
-
-  input[type='range']::-webkit-slider-thumb {
-    vertical-align: middle;
-    -webkit-appearance: none;
-    background-color: #444;
-    width: 16px;
-    height: 16px;
-    border-radius: 16px;
-  }  

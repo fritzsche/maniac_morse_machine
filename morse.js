@@ -299,24 +299,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
         button.appendChild(node);
         chars.appendChild(button);
     })
-
-    /*
-    
-        updateActiveChars();
-    
-        document.querySelectorAll("#chars button").forEach( 
-             domElement => { 
-                 let ch = domElement.innerHTML;
-                 if (activeChars.indexOf(ch) === -1) domElement.removeAttribute('data-active');
-                  else domElement.setAttribute('data-active', 'true');
-                 domElement.addEventListener('click',event =>{
-                     console.log("Click");
-    
-                     document.getElementById("txt").focus();
-                     event.preventDefault();
-                 })
-            }
-        )
-    */
+    morseInputField.focus();
 
 });
