@@ -7,11 +7,6 @@ body {
 h1 {
     color: rgb(28, 161, 202);
     text-decoration: none;
-    font-size: 1.4em;
-}
-
-.explain {
- font-size: 0.9em;
 }
 
 #chars button[data-active="true"] {
@@ -46,3 +41,5 @@ input {
 display: inline-block;
 float: left;
 }
+
+.setclear { clear: both; margin-bottom: 1em;}

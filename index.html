@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0;" />
   <link rel="stylesheet" href="style.css" type="text/css" media="screen" />
   <title>Maniac Morse Machine</title>
 </head>
@@ -10,20 +11,27 @@
 <body>
   <h1>Maniac Morse Machine</h1>
   <div class="explain">
-      <p>Start or repeat the last Morse ode by pressing SPACE in the result field.</p>
-    </div>
-  <div>
-      <p id="chars" />
+    <p>Start or repeat the last Morse ode by pressing SPACE in the code field.</p>
   </div>
   <div>
+    <p>
+      <label for="txt">Code </label><input type="text" autocomplete="off" name="code" id="txt" autofocus />
+    </p>
     <p>
       <label for="cpm"> Char per Min </label> <input id="cpm" type="number" min="40" max="200" step="10" value="60">
     </p>
 
+
+  </div>
+
+  <div class="setclear">
     <p>
-      <label for="txt">Result </label><input type="text" autocomplete="off" name="code" id="txt" autofocus />
+      Select Characters
+      <div>
+        <p id="chars" />
+      </div>
     </p>
-    </div>
+  </div>
 
   <script src="morse.js"></script>
 </body>
