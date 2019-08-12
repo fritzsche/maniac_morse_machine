@@ -292,7 +292,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             if (activeChars.indexOf(ch) === -1) activeChars += ch; else activeChars = activeChars.replace(ch, "");
             updateActiveChars(activeChars);
             if(mmm) mmm.activeCharacter = activeChars;
-            document.getElementById("txt").focus();
+         //   document.getElementById("txt").focus();
             event.preventDefault();
         })
         var node = document.createTextNode(letter);
