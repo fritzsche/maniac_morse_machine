@@ -1,18 +1,5 @@
-
-
-
 const keyShape = 0.004;
 const noSound = 0.0001;
-
-// character per minute
-const cpm = 60;
-
-//const dit = cpmDitSpeed / cpm;
-
-// a dah is 3 times the time of a dit
-//const dah = 3 * dit;
-
-
 
 class Morse {
     constructor(cpm = 60) {
@@ -60,7 +47,11 @@ class Morse {
     }
 
     get _dit() {
-        // at a speed of 100 cpm (character per minute) a dit has 60ms length
+        // The standard word "PARIS" has 50 units of time. 100cpm (character per minute) 
+        // means we need to give 20 times to word "PARIS".
+        // means we give 20 times 50 units of time = 1000 units of time per minute (or 60 seconds).
+        // 60 seconds devided by 1000 unit of time, means each unit (dit) takes 60ms.
+        // Means at  speed of 100 cpm  a dit has 60ms length
         // length of one dit in s = ( 60ms * 100 ) / 1000
         const cpmDitSpeed = (60 * 100) / 1000;
         return cpmDitSpeed / this._cpm;
@@ -106,7 +97,7 @@ class Morse {
         this._errorGain.gain.setValueAtTime(1, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
-        this._scheduleTime += 0.2;
+        this._scheduleTime += 0.3;
         this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime);
     }
 
@@ -234,6 +225,8 @@ class ManiacMorseMachine {
 
 
 document.addEventListener("DOMContentLoaded", function (event) {
+    // the main controller is hold in mmm, but we wait to instantiate it until 
+    // the first user event. This is to provide problem with chrome-autoplay protection
     var mmm = null;
 
     const cpmKey = "CpM";
