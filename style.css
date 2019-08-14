@@ -13,6 +13,21 @@ h1 {
   background-color: rgb(28, 161, 202);
 }
 
+
+#gof {
+  background-color: gray;
+  border: none;
+
+  margin: 3px;
+  color: white;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.1em;
+  border-radius: 7px;
+}
+
 #chars button {
   background-color: gray;
   border: none;

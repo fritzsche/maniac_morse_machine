@@ -62,6 +62,14 @@ class Morse {
         return 3 * this._dit;
     }
 
+    get currentTime() {
+        return this._ctx.currentTime;
+    }
+
+    get latestScheduleTime() {
+        return this._scheduleTime;
+    }
+
     cancelSheduledAndMute() {
         let origSchedule = this._scheduleTime;
         this._scheduleTime = this._ctx.currentTime;
@@ -153,10 +161,10 @@ class Morse {
     morseText(text) {
         var txt = text.toLowerCase();
 
-        txt.trim();
+//        txt = txt.trim();
         txt = txt.replace(/./g, match => this.toMorse(match) + ' ')
         txt = txt.replace(/ \/ /g, "/");
-        txt.trim();
+        txt = txt.trim();
         return this.morseCode(txt);
     }
 }
@@ -220,6 +228,35 @@ class ManiacMorseMachine {
         }
     }
 
+    getGroupOfFive() {
+        var gof = "";
+        for (var i = 0; i < 5; i++) {
+            this.selectRandomCharacter();
+            gof += this._currentCharacter;
+        }
+        return gof;
+    }
+
+    playGroup() {
+        let gof = this.getGroupOfFive();
+        let startTime = this._morse.currentTime;
+        this._morse.morseText(gof+" ")
+        let endTime = this._morse.latestScheduleTime;
+        let targetTime = ((endTime - startTime) * 1000) - 10;
+        setTimeout(() => { 
+            this.playGroup() 
+        }, targetTime)
+    }
+
+    playGroupOfFive() {
+        console.log("Hello!");
+        this.stopSound()
+        this.playGroup();
+
+
+        //  this.stopSound() 
+    }
+
 }
 
 
@@ -233,6 +270,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     const getCpM = () => localStorage.getItem(cpmKey) || 60
     const getActiveChars = () => localStorage.getItem("activeChar") || "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const setMorseMachine = () => {
+        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars());
+    }
 
     let cpMInputField = document.getElementById("cpm");
 
@@ -250,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     morseInputField.focus();
     morseInputField.addEventListener('keydown', e => {
         // we can just start sound after first event
-        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars());
+        setMorseMachine();
         mmm.processKeyInput(e.key);
         e.preventDefault();
     }
@@ -284,14 +324,21 @@ document.addEventListener("DOMContentLoaded", function (event) {
             let ch = event.target.innerHTML;
             if (activeChars.indexOf(ch) === -1) activeChars += ch; else activeChars = activeChars.replace(ch, "");
             updateActiveChars(activeChars);
-            if(mmm) mmm.activeCharacter = activeChars;
-         //   document.getElementById("txt").focus();
+            if (mmm) mmm.activeCharacter = activeChars;
             event.preventDefault();
         })
         var node = document.createTextNode(letter);
         button.appendChild(node);
         chars.appendChild(button);
     })
+
+    document.getElementById("gof").onclick = e => {
+        setMorseMachine();
+        mmm.playGroupOfFive();
+    }
+
+
     morseInputField.focus();
+
 
 });
