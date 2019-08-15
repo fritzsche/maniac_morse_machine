@@ -2,7 +2,7 @@ const keyShape = 0.004;
 const noSound = 0.0001;
 
 class Morse {
-    constructor(cpm = 60) {
+    constructor(cpm = 60,farnsworthFactor = 1) {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
         // set audio to 
@@ -12,7 +12,7 @@ class Morse {
 
         this._gain = Morse.initGain(this._ctx);
         this._oscillator = Morse.initOscillator(this._ctx, "sine", 750, this._gain);
-
+        this._farnsworthFactor = farnsworthFactor;
         this._cpm = cpm;
 
     }
@@ -46,15 +46,34 @@ class Morse {
         this._cpm = cpm;
     }
 
-    get _dit() {
-        // The standard word "PARIS" has 50 units of time. 100cpm (character per minute) 
+    set farnsworthFactor(factor) {
+        this._farnsworthFactor = factor;
+    }    
+
+    _ditLength(cpm) {
+        // The standard word "PARIS" has 50 units of time. 
+        // .--.  .-  .-.  ..  ... ==> "PARIS"
+        // 10 dit + 4 dah + 9 dit space + 4 dah space = 19 dit + 24 dit = 43 dit.
+        // 43 dit + 7 dit between words results in 50 dits total time
+        //
+        // 100cpm (character per minute) 
         // means we need to give 20 times to word "PARIS".
         // means we give 20 times 50 units of time = 1000 units of time per minute (or 60 seconds).
         // 60 seconds devided by 1000 unit of time, means each unit (dit) takes 60ms.
         // Means at  speed of 100 cpm  a dit has 60ms length
-        // length of one dit in s = ( 60ms * 100 ) / 1000
+        // length of one dit in s = ( 60ms * 100 ) / 1000        
         const cpmDitSpeed = (60 * 100) / 1000;
-        return cpmDitSpeed / this._cpm;
+        return cpmDitSpeed / cpm;
+    }
+
+    _additionalPause(characterSpeed, factor) {
+        let cWord = 50 * this._ditLength(characterSpeed);
+        let tWord = 50 * this._ditLength(characterSpeed / factor);
+        return tWord - cWord;
+    }
+
+    get _dit() {
+        return this._ditLength(this._cpm);
     }
 
 
@@ -68,6 +87,18 @@ class Morse {
 
     get latestScheduleTime() {
         return this._scheduleTime;
+    }
+
+    get _farnsworthLetterSpace() {
+        if ( this.farnsworthFactor === 1) return 0;
+        let pause = this._additionalPause(this._cpm, this._farnsworthFactor);
+        return ( pause * 3) / 19;
+    }
+
+    get _farnsworthWordSpace() {
+        if ( this.farnsworthFactor === 1) return 0;
+        let pause = this._additionalPause(this._cpm, this._farnsworthFactor);
+        return (pause * 7) / 19;
     }
 
     cancelSheduledAndMute() {
@@ -105,7 +136,7 @@ class Morse {
         this._errorGain.gain.setValueAtTime(1, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
-        this._scheduleTime += 0.3;
+        this._scheduleTime += 0.4;
         this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime);
     }
 
@@ -149,11 +180,11 @@ class Morse {
                     break;
                 // between character space is 3 dits (or one dah)    
                 case " ":
-                    this._scheduleTime += this._dah
+                    this._scheduleTime += this._dah + this._farnsworthLetterSpace;
                     break;
                 // space between words is 7 dits    
                 case "/":
-                    this._scheduleTime += 7 * this._dit;
+                    this._scheduleTime += 7 * this._dit + this._farnsworthWordSpace;
                     break;
             }
         });
@@ -161,7 +192,7 @@ class Morse {
     morseText(text) {
         var txt = text.toLowerCase();
 
-//        txt = txt.trim();
+        //        txt = txt.trim();
         txt = txt.replace(/./g, match => this.toMorse(match) + ' ')
         txt = txt.replace(/ \/ /g, "/");
         txt = txt.trim();
@@ -239,12 +270,13 @@ class ManiacMorseMachine {
 
     playGroup() {
         let gof = this.getGroupOfFive();
+        this._morse.farnsworthFactor = 3;
         let startTime = this._morse.currentTime;
-        this._morse.morseText(gof+" ")
+        this._morse.morseText(gof + " ")
         let endTime = this._morse.latestScheduleTime;
         let targetTime = ((endTime - startTime) * 1000) - 10;
-        setTimeout(() => { 
-            this.playGroup() 
+        setTimeout(() => {
+            this.playGroup()
         }, targetTime)
     }
 
