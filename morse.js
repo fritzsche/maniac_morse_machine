@@ -2,7 +2,7 @@ const keyShape = 0.004;
 const noSound = 0.0001;
 
 class Morse {
-    constructor(cpm = 60,farnsworthFactor = 1) {
+    constructor(cpm = 60, farnsworthFactor = 1) {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
         // set audio to 
@@ -48,7 +48,7 @@ class Morse {
 
     set farnsworthFactor(factor) {
         this._farnsworthFactor = factor;
-    }    
+    }
 
     _ditLength(cpm) {
         // The standard word "PARIS" has 50 units of time. 
@@ -90,13 +90,13 @@ class Morse {
     }
 
     get _farnsworthLetterSpace() {
-        if ( this.farnsworthFactor === 1) return 0;
+        if (this.farnsworthFactor <= 1) return 0;
         let pause = this._additionalPause(this._cpm, this._farnsworthFactor);
-        return ( pause * 3) / 19;
+        return (pause * 3) / 19;
     }
 
     get _farnsworthWordSpace() {
-        if ( this.farnsworthFactor === 1) return 0;
+        if (this.farnsworthFactor <= 1) return 0;
         let pause = this._additionalPause(this._cpm, this._farnsworthFactor);
         return (pause * 7) / 19;
     }
@@ -158,7 +158,9 @@ class Morse {
             ';': '-.-.-.', '=': '-...-', '+': '.-.-.',
             '-': '-....-', '_': '..--.-', '"': '.-..-.',
             '$': '...-..-', '!': '-.-.--', '@': '.--.-.',
-            ' ': '/',
+            ' ': '/', // seperator for words
+            '#': '-.-.-', // start sign
+            '~': '.-.-.' // end sign
         }
         return code_map[ch]
     }
@@ -220,6 +222,7 @@ class ManiacMorseMachine {
     }
 
     playCurrentCharacter() {
+        this._morse.farnsworthFactor = 1;
         this._morse.morseText(this._currentCharacter)
     }
 
@@ -268,25 +271,59 @@ class ManiacMorseMachine {
         return gof;
     }
 
-    playGroup() {
-        let gof = this.getGroupOfFive();
-        this._morse.farnsworthFactor = 3;
-        let startTime = this._morse.currentTime;
-        this._morse.morseText(gof + " ")
-        let endTime = this._morse.latestScheduleTime;
-        let targetTime = ((endTime - startTime) * 1000) - 10;
-        setTimeout(() => {
-            this.playGroup()
-        }, targetTime)
+    _escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+     }
+    displayGroup(text) {
+        document.getElementById("gof-result").innerHTML += this._escapeHtml( text.toUpperCase() );
     }
 
-    playGroupOfFive() {
-        console.log("Hello!");
-        this.stopSound()
-        this.playGroup();
+    playGroup(repeat, factor) {
+        if (repeat === 0) {
+            this.stopGroupOfFive();
+            return;
+        }
+        let gof = this.getGroupOfFive();
+        this._morse.farnsworthFactor = factor;
+        let startTime = this._morse.currentTime;
+        this._morse.morseText(gof + " ")
+        this.displayGroup(gof);        
+        if (repeat == 1) {
+            this._morse.morseText("~")  
+            this.displayGroup(" <end>");  
+        }
+        let endTime = this._morse.latestScheduleTime;
 
+        if (repeat > 1) this.displayGroup(" ");
+        let targetTime = ((endTime - startTime) * 1000)-5;
+        if (repeat >= 1) {
+            this._timerId = setTimeout(() => {
+                this.playGroup(repeat - 1, factor)
+            }, targetTime)
+        }        
+    }
 
+    playGroupOfFive(repeat, factor) {
+        this.stopSound();
+        document.getElementById("gof-result").innerHTML = '';        
+        // start sign
+        this._morse.morseText('# ')
+        this.displayGroup("<start> ");
+
+        this.playGroup(repeat, factor);
         //  this.stopSound() 
+    }
+
+    stopGroupOfFive() {
+        clearTimeout(this._timerId);
+        this.stopSound();
+        document.getElementById("gof").classList.remove("nodisplay");
+        document.getElementById("gof-stop").classList.add("nodisplay"); 
     }
 
 }
@@ -364,13 +401,27 @@ document.addEventListener("DOMContentLoaded", function (event) {
         chars.appendChild(button);
     })
 
-    document.getElementById("gof").onclick = e => {
-        setMorseMachine();
-        mmm.playGroupOfFive();
+    document.getElementById("ff").value = localStorage.getItem("farnsworth-factor") || 2;
+    document.getElementById("ff").onchange = e => {
+        localStorage.setItem("farnsworth-factor", e.target.value);
     }
 
+    document.getElementById("repeat").value = localStorage.getItem("group-of-five-repeat") || 10;
+    document.getElementById("repeat").onchange = e => {
+        localStorage.setItem("group-of-five-repeat", e.target.value);
+    }
 
+    document.getElementById("gof").onclick = e => {
+        setMorseMachine();
+        document.getElementById("gof").classList.add("nodisplay");
+        document.getElementById("gof-stop").classList.remove("nodisplay");        
+        let repeat = document.getElementById("repeat").value;
+        let factor = document.getElementById("ff").value;
+        mmm.playGroupOfFive(repeat, factor);
+    }
+
+    document.getElementById("gof-stop").onclick = e => {
+        mmm.stopGroupOfFive();
+    }    
     morseInputField.focus();
-
-
 });

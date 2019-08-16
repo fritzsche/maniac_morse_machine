@@ -1,20 +1,46 @@
+/* css reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+p{
+margin-block-start: 1em;
+margin-block-end: 1em;
+}
+
 body {
     background: black;
     font-family: 'Open Sans', sans-serif;
     color: #ccc;
+    margin: 5px;
   }
 
 h1 {
     color: rgb(28, 161, 202);
     text-decoration: none;
+    margin-bottom: 0.2em;
+}
+
+h2 {
+  color: rgb(229, 241, 245);
+  text-decoration: none;
 }
 
 #chars button[data-active="true"] {
   background-color: rgb(28, 161, 202);
 }
 
+#gof-stop{
+  background-color: rgb(245, 8, 8);
+}
 
-#gof {
+.nodisplay{
+  display: none;
+}
+
+.gof button{
   background-color: gray;
   border: none;
 
@@ -23,7 +49,7 @@ h1 {
   padding: 5px 5px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
+
   font-size: 1.1em;
   border-radius: 7px;
 }
@@ -44,8 +70,8 @@ h1 {
 }
 
 
+
 label{
-  display: inline-block;
   float: left;
   clear: left;
   width: 140px;
@@ -53,7 +79,6 @@ label{
   margin-bottom: 1em;
 }
 input {
-display: inline-block;
 float: left;
 }
 

@@ -10,19 +10,10 @@
 
 <body>
   <h1>Maniac Morse Machine</h1>
-  <div class="explain">
-    <p>Start or repeat the last Morse ode by pressing SPACE in the input field.</p>
-  </div>
-  <div>
-    <p>
-      <label for="txt">Input </label><input type="text" autocomplete="off" name="code" id="txt" autofocus />
-    </p>
-    <p>
-      <label for="cpm"> Char per Min </label> <input id="cpm" type="number" min="40" max="200" step="10" value="60">
-    </p>
-  </div>
-
-
+  <h2>General</h2>
+  <p>
+    <label for="cpm"> Char per Min </label> <input id="cpm" type="number" min="40" max="200" step="10" value="60">
+  </p>
   <div class="setclear">
     <p>
       Select Characters
@@ -31,11 +22,35 @@
       </div>
     </p>
   </div>
+  <h2>Single Characters</h2>
+  <div class="explain">
+    <p>Start or repeat the last Morse Code by pressing SPACE in the input field.</p>
+  </div>
+  <div>
+    <p>
+      <label for="txt">Input </label>
+      <textarea type="text" autocomplete="off" name="code" id="txt" autofocus>
+      </textarea>
+    </p>
+  </div>
 
-  <p class="setclear">
-    <button id="gof">Play groups of five</button>
+  <h2 class="setclear">Groups of Five</h2>
+  <div class="explain">
+    <p>Play groups of five characters.</p>
+  </div> 
+  <p>
+    <label for="ff">Farnsworth Factor </label> <input id="ff" type="number" min="1" max="10" step="0.1" value="1">
   </p>
-
+  <p>
+    <label for="repeat">Number of Groups</label> <input id="repeat" type="number" min="1" max="200" step="1" value="2">
+  </p>
+  <p class="setclear gof">
+    <button id="gof">Play Groups of Five</button>
+    <button class="nodisplay" id="gof-stop">Stop Groups of Five</button>    
+  </p>
+  <p>
+    <div id="gof-result"></div>
+  </p>
   <script src="morse.js"></script>
 </body>
 
