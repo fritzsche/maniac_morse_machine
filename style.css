@@ -78,8 +78,12 @@ label{
   text-align: left;
   margin-bottom: 1em;
 }
-input {
-float: left;
+input, textarea {
+  float: left;
+  padding: 2px;
+  width: 150px;
 }
+
+
 
 .setclear { clear: both; margin-bottom: 1em;}
