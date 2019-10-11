@@ -151,7 +151,7 @@ class Morse {
             y: '-.--', z: '--..', 1: '.----', 2: '..---',
             3: '...--', 4: '....-', 5: '.....', 6: '-....',
             7: '--...', 8: '---..', 9: '----.', 0: '-----',
-
+            '=': '-...-',
             '.': '.-.-.-', ',': '--..--', '?': '..--..',
             "'": '.----.', '/': '-..-.', '(': '-.--.',
             ')': '-.--.-', '&': '.-...', ':': '---...',
@@ -385,7 +385,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     var activeChars = getActiveChars();
     let chars = document.getElementById("chars");
-    const allCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?/";
+    const allCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?/=";
     allCharacters.split("").forEach(letter => {
         var button = document.createElement("button");
         if (activeChars.indexOf(letter) !== -1) button.setAttribute('data-active', 'true');
