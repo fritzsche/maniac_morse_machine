@@ -1,5 +1,5 @@
 const keyShape = 0.004;
-const noSound = 0.0005;
+const noSound = 0.0001;
 
 class Morse {
     constructor(cpm = 60, farnsworthFactor = 1) {
@@ -13,18 +13,18 @@ class Morse {
         this._errorOscillator = Morse.initOscillator(this._ctx, "sawtooth", 100, this._errorGain);
 
         this._gain = Morse.initGain(this._ctx);
+/*        
         this._lowpass = this._ctx.createBiquadFilter();
         this._lowpass.type = "lowpass";
         this._lowpass.frequency.setValueAtTime(this._frequency * 1, 0);
-//        this._lowpass.Q.setValueAtTime(0.707, 0);           
+        this._lowpass.Q.setValueAtTime(0.707, 0);           
 
-        /*
         let gain = this._ctx.createGain( );
         gain.gain.value = 0.6;
         this._lowpass.connect(gain);
         gain.connect(this._gain);
 */
-        this._lowpass.connect(this._gain);
+//        this._lowpass.connect(this._gain);
         this._oscillator = Morse.initOscillator(this._ctx, "sine", this._frequency, this._gain);
         this._farnsworthFactor = farnsworthFactor;
         this._cpm = cpm;
@@ -131,10 +131,11 @@ class Morse {
 
     tone(len) {
         this._gain.gain.setValueAtTime(noSound, this._scheduleTime);
+//        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)        
         this._scheduleTime += keyShape;
-        this._gain.gain.exponentialRampToValueAtTime(1, this._scheduleTime)
+        this._gain.gain.exponentialRampToValueAtTime(0.9, this._scheduleTime)
         this._scheduleTime += len
-        this._gain.gain.setValueAtTime(1, this._scheduleTime);
+        this._gain.gain.setValueAtTime(0.9, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
     }
@@ -145,9 +146,9 @@ class Morse {
         this._scheduleTime += 0.3;
         this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime)
         this._scheduleTime += keyShape
-        this._errorGain.gain.exponentialRampToValueAtTime(0.5, this._scheduleTime)
+        this._errorGain.gain.exponentialRampToValueAtTime(0.4, this._scheduleTime)
         this._scheduleTime += 0.2;
-        this._errorGain.gain.setValueAtTime(0.5, this._scheduleTime);
+        this._errorGain.gain.setValueAtTime(0.4, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
         this._scheduleTime += 0.4;
