@@ -5,13 +5,22 @@ class Morse {
     constructor(cpm = 60, farnsworthFactor = 1) {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
+        this._frequency = 750;
+        
         // set audio to 
 
         this._errorGain = Morse.initGain(this._ctx);
         this._errorOscillator = Morse.initOscillator(this._ctx, "sawtooth", 100, this._errorGain);
 
         this._gain = Morse.initGain(this._ctx);
-        this._oscillator = Morse.initOscillator(this._ctx, "sine", 750, this._gain);
+        this._lowpass = this._ctx.createBiquadFilter();
+        this._lowpass.type = "lowpass";
+        this._lowpass.frequency.setValueAtTime(this._frequency * 1.1, 0);
+        this._lowpass.Q.setValueAtTime(0.707, 0);           
+        this._lowpass.connect(this._gain);
+
+
+        this._oscillator = Morse.initOscillator(this._ctx, "sine", this._frequency, this._lowpass);
         this._farnsworthFactor = farnsworthFactor;
         this._cpm = cpm;
 
