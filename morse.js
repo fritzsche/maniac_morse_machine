@@ -1,5 +1,5 @@
 const keyShape = 0.004;
-const noSound = 0.0001;
+const noSound = 0.00001;
 
 class Morse {
     constructor(cpm = 60, farnsworthFactor = 1) {
