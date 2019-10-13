@@ -151,7 +151,7 @@ class Morse {
         this._errorGain.gain.setValueAtTime(0.4, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
-        this._scheduleTime += 0.4;
+        this._scheduleTime += 0.6;
         this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime);
     }
 
