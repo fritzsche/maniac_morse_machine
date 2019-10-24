@@ -372,18 +372,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     let morseInputField = document.getElementById("txt");
     morseInputField.focus();
-    morseInputField.addEventListener('keydown', e => {
+    morseInputField.onkeydown = e => {
         // we can just start sound after first event
         setMorseMachine();
         mmm.processKeyInput(e.key);
         e.preventDefault();
-    }
-    );
-    morseInputField.addEventListener('keyup', e => {
+    };
+    morseInputField.onkeyup = e => {
         e.target.value = "";
         e.target.focus();
         e.preventDefault();
-    });
+    };
 
 
     const updateActiveChars = (active) => {
