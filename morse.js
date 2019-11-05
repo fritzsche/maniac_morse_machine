@@ -2,10 +2,10 @@ const keyShape = 0.004;
 const noSound = 0.00001;
 
 class Morse {
-    constructor(cpm = 60, farnsworthFactor = 1) {
+    constructor(cpm = 60, farnsworthFactor = 1, frequency = 650) {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
-        this._frequency = 750;
+        this._frequency = frequency;
         
         // set audio to 
 
@@ -13,18 +13,7 @@ class Morse {
         this._errorOscillator = Morse.initOscillator(this._ctx, "sawtooth", 100, this._errorGain);
 
         this._gain = Morse.initGain(this._ctx);
-/*        
-        this._lowpass = this._ctx.createBiquadFilter();
-        this._lowpass.type = "lowpass";
-        this._lowpass.frequency.setValueAtTime(this._frequency * 1, 0);
-        this._lowpass.Q.setValueAtTime(0.707, 0);           
 
-        let gain = this._ctx.createGain( );
-        gain.gain.value = 0.6;
-        this._lowpass.connect(gain);
-        gain.connect(this._gain);
-*/
-//        this._lowpass.connect(this._gain);
         this._oscillator = Morse.initOscillator(this._ctx, "sine", this._frequency, this._gain);
         this._farnsworthFactor = farnsworthFactor;
         this._cpm = cpm;
@@ -45,6 +34,11 @@ class Morse {
         oscillator.connect(gain);
         oscillator.start();
         return oscillator;
+    }
+
+    set frequency(f) {
+        this._frequency = f
+        this._oscillator.frequency.setValueAtTime(  this._frequency,0 ); 
     }
 
     static wpmToCpm(wpm) {
@@ -217,10 +211,11 @@ class Morse {
 }
 
 class ManiacMorseMachine {
-    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X") {
+    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X",frequency = 650) {
         this._allCharacters = active.toLowerCase();
+        this._frequency = frequency;
         this.selectRandomCharacter();
-        this._morse = new Morse(cpm);
+        this._morse = new Morse(cpm,1,frequency);
     }
     selectRandomCharacter() {
         this._currentCharacter = this._allCharacters.charAt(
@@ -249,6 +244,9 @@ class ManiacMorseMachine {
         this._morse.cpm = cpm;
     }
 
+    set frequency(f) {
+        this._morse.frequency = f;
+    }
 
     set activeCharacter(active) {
         this.stopSound();
@@ -353,8 +351,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     const getCpM = () => localStorage.getItem(cpmKey) || 60
     const getActiveChars = () => localStorage.getItem("activeChar") || "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const getFrequency = () => localStorage.getItem("frequency") || 650
     const setMorseMachine = () => {
-        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars());
+        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars(),getFrequency());
     }
 
     let cpMInputField = document.getElementById("cpm");
@@ -368,6 +367,13 @@ document.addEventListener("DOMContentLoaded", function (event) {
         localStorage.setItem(cpmKey, cpm);
     })
 
+    let freqInputField = document.getElementById("freq"); 
+    freqInputField.value = getFrequency();
+    freqInputField.onchange = ( e => {
+        let freq = e.target.value;
+        if (mmm) mmm.frequency = freq;
+        localStorage.setItem('frequency', freq);
+    } );
 
     let morseInputField = document.getElementById("txt");
     morseInputField.focus();
