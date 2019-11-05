@@ -2,10 +2,11 @@ const keyShape = 0.004;
 const noSound = 0.00001;
 
 class Morse {
-    constructor(cpm = 60, farnsworthFactor = 1, frequency = 650) {
+    constructor(cpm = 60, farnsworthFactor = 1, frequency = 650, volume = 1) {
         this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         this._scheduleTime = this._ctx.currentTime;
         this._frequency = frequency;
+        this._volume = volume;
         
         // set audio to 
 
@@ -39,6 +40,10 @@ class Morse {
     set frequency(f) {
         this._frequency = f
         this._oscillator.frequency.setValueAtTime(  this._frequency,0 ); 
+    }
+
+    set volume(v) {
+        this._volume = v
     }
 
     static wpmToCpm(wpm) {
@@ -124,25 +129,28 @@ class Morse {
     }
 
     tone(len) {
+        var volume = 0.9 * this._volume
+        if (volume < noSound) volume = noSound
         this._gain.gain.setValueAtTime(noSound, this._scheduleTime);
 //        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)        
         this._scheduleTime += keyShape;
-        this._gain.gain.exponentialRampToValueAtTime(0.9, this._scheduleTime)
+        this._gain.gain.exponentialRampToValueAtTime(volume, this._scheduleTime)
         this._scheduleTime += len
-        this._gain.gain.setValueAtTime(0.9, this._scheduleTime);
+        this._gain.gain.setValueAtTime(volume, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
     }
 
     errorSound() {
         this.cancelSheduledAndMute();
-
+        var volume = 0.4*this._volume
+        if (volume < noSound) volume = noSound
         this._scheduleTime += 0.3;
         this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime)
         this._scheduleTime += keyShape
-        this._errorGain.gain.exponentialRampToValueAtTime(0.4, this._scheduleTime)
+        this._errorGain.gain.exponentialRampToValueAtTime(volume, this._scheduleTime)
         this._scheduleTime += 0.2;
-        this._errorGain.gain.setValueAtTime(0.4, this._scheduleTime);
+        this._errorGain.gain.setValueAtTime(volume, this._scheduleTime);
         this._scheduleTime += keyShape;
         this._errorGain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime);
         this._scheduleTime += 0.6;
@@ -211,11 +219,12 @@ class Morse {
 }
 
 class ManiacMorseMachine {
-    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X",frequency = 650) {
+    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X",frequency = 650,volume = 1) {
         this._allCharacters = active.toLowerCase();
         this._frequency = frequency;
         this.selectRandomCharacter();
         this._morse = new Morse(cpm,1,frequency);
+        this._morse.volume = volume;
     }
     selectRandomCharacter() {
         this._currentCharacter = this._allCharacters.charAt(
@@ -247,6 +256,10 @@ class ManiacMorseMachine {
     set frequency(f) {
         this._morse.frequency = f;
     }
+
+    set volume(v) {
+        this._morse.volume = v;
+    }    
 
     set activeCharacter(active) {
         this.stopSound();
@@ -352,8 +365,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
     const getCpM = () => localStorage.getItem(cpmKey) || 60
     const getActiveChars = () => localStorage.getItem("activeChar") || "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const getFrequency = () => localStorage.getItem("frequency") || 650
+    const getVolume = () => localStorage.getItem("volume") || 1
     const setMorseMachine = () => {
-        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars(),getFrequency());
+        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars(),getFrequency(),getVolume());
     }
 
     let cpMInputField = document.getElementById("cpm");
@@ -374,6 +388,15 @@ document.addEventListener("DOMContentLoaded", function (event) {
         if (mmm) mmm.frequency = freq;
         localStorage.setItem('frequency', freq);
     } );
+
+    let volumeInputField = document.getElementById("volume"); 
+    volumeInputField.value = getVolume();
+    volumeInputField.onchange = ( e => {
+        let volume = e.target.value;
+        if (mmm) mmm.volume = volume;
+        localStorage.setItem('volume', volume);
+    } );
+
 
     let morseInputField = document.getElementById("txt");
     morseInputField.focus();
