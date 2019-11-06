@@ -7,7 +7,7 @@ class Morse {
         this._scheduleTime = this._ctx.currentTime;
         this._frequency = frequency;
         this._volume = volume;
-        
+
         // set audio to 
 
         this._errorGain = Morse.initGain(this._ctx);
@@ -39,7 +39,7 @@ class Morse {
 
     set frequency(f) {
         this._frequency = f
-        this._oscillator.frequency.setValueAtTime(  this._frequency,0 ); 
+        this._oscillator.frequency.setValueAtTime(this._frequency, 0);
     }
 
     set volume(v) {
@@ -132,7 +132,7 @@ class Morse {
         var volume = 0.9 * this._volume
         if (volume < noSound) volume = noSound
         this._gain.gain.setValueAtTime(noSound, this._scheduleTime);
-//        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)        
+        //        this._gain.gain.exponentialRampToValueAtTime(noSound, this._scheduleTime)        
         this._scheduleTime += keyShape;
         this._gain.gain.exponentialRampToValueAtTime(volume, this._scheduleTime)
         this._scheduleTime += len
@@ -143,7 +143,7 @@ class Morse {
 
     errorSound() {
         this.cancelSheduledAndMute();
-        var volume = 0.4*this._volume
+        var volume = 0.4 * this._volume
         if (volume < noSound) volume = noSound
         this._scheduleTime += 0.3;
         this._errorGain.gain.setValueAtTime(noSound, this._scheduleTime)
@@ -219,11 +219,11 @@ class Morse {
 }
 
 class ManiacMorseMachine {
-    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X",frequency = 650,volume = 1) {
+    constructor(cpm = 60, active = "KMURESNAPTLWI.JZ=FOY,VG5/Q92H38B?47C1D60X", frequency = 650, volume = 1) {
         this._allCharacters = active.toLowerCase();
         this._frequency = frequency;
         this.selectRandomCharacter();
-        this._morse = new Morse(cpm,1,frequency);
+        this._morse = new Morse(cpm, 1, frequency);
         this._morse.volume = volume;
     }
     selectRandomCharacter() {
@@ -259,7 +259,7 @@ class ManiacMorseMachine {
 
     set volume(v) {
         this._morse.volume = v;
-    }    
+    }
 
     set activeCharacter(active) {
         this.stopSound();
@@ -287,25 +287,47 @@ class ManiacMorseMachine {
         }
     }
 
-    getGroupOfFive() {
-        var gof = "";
-        for (var i = 0; i < 5; i++) {
+    getGroupOfRandom(number = 5) {
+        var str = "";
+        for (var i = 0; i < number; i++) {
             this.selectRandomCharacter();
-            gof += this._currentCharacter;
+            str += this._currentCharacter;
         }
-        return gof;
+        return str;
     }
 
     _escapeHtml(unsafe) {
         return unsafe
-             .replace(/&/g, "&amp;")
-             .replace(/</g, "&lt;")
-             .replace(/>/g, "&gt;")
-             .replace(/"/g, "&quot;")
-             .replace(/'/g, "&#039;");
-     }
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
     displayGroup(text) {
-        document.getElementById("gof-result").innerHTML += this._escapeHtml( text.toUpperCase() );
+        document.getElementById("gof-result").innerHTML += this._escapeHtml(text.toUpperCase());
+    }
+
+    getRandomWord() {
+        var number = localStorage.getItem("noChar")
+        this._randomWord = this.getGroupOfRandom(number);
+    }
+
+    playRandom() {
+        this.stopSound();
+        if (!this._randomWord) this.getRandomWord();
+        this._morse.morseText(this._randomWord);
+        document.getElementById("random_next_btn").classList.remove("nodisplay");
+        document.getElementById("random_btn").innerHTML = 'Repeat Word';
+    }
+
+    nextRandom() {
+        this.stopSound();
+        var last = this._randomWord
+        document.getElementById("random_btn").innerHTML = 'Repeat Word';
+        this.getRandomWord();
+        document.getElementById("random_result").innerHTML = last;
+        this._morse.morseText(this._randomWord);
     }
 
     playGroup(repeat, factor) {
@@ -313,29 +335,29 @@ class ManiacMorseMachine {
             this.stopGroupOfFive();
             return;
         }
-        let gof = this.getGroupOfFive();
+        let gof = this.getGroupOfRandom();
         this._morse.farnsworthFactor = factor;
         let startTime = this._morse.currentTime;
         this._morse.morseText(gof + " ")
-        this.displayGroup(gof);        
+        this.displayGroup(gof);
         if (repeat == 1) {
-            this._morse.morseText("~")  
-            this.displayGroup(" <end>");  
+            this._morse.morseText("~")
+            this.displayGroup(" <end>");
         }
         let endTime = this._morse.latestScheduleTime;
 
         if (repeat > 1) this.displayGroup(" ");
-        let targetTime = ((endTime - startTime) * 1000)-5;
+        let targetTime = ((endTime - startTime) * 1000) - 5;
         if (repeat >= 1) {
             this._timerId = setTimeout(() => {
                 this.playGroup(repeat - 1, factor)
             }, targetTime)
-        }        
+        }
     }
 
     playGroupOfFive(repeat, factor) {
         this.stopSound();
-        document.getElementById("gof-result").innerHTML = '';        
+        document.getElementById("gof-result").innerHTML = '';
         // start sign
         this._morse.morseText('# ')
         this.displayGroup("<start> ");
@@ -348,7 +370,7 @@ class ManiacMorseMachine {
         clearTimeout(this._timerId);
         this.stopSound();
         document.getElementById("gof").classList.remove("nodisplay");
-        document.getElementById("gof-stop").classList.add("nodisplay"); 
+        document.getElementById("gof-stop").classList.add("nodisplay");
     }
 
 }
@@ -366,8 +388,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
     const getActiveChars = () => localStorage.getItem("activeChar") || "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const getFrequency = () => localStorage.getItem("frequency") || 650
     const getVolume = () => localStorage.getItem("volume") || 1
+    const getNoChar = () => localStorage.getItem("noChar") || 3
     const setMorseMachine = () => {
-        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars(),getFrequency(),getVolume());
+        if (!mmm) mmm = new ManiacMorseMachine(getCpM(), getActiveChars(), getFrequency(), getVolume());
     }
 
     let cpMInputField = document.getElementById("cpm");
@@ -380,22 +403,46 @@ document.addEventListener("DOMContentLoaded", function (event) {
         if (mmm) mmm.cpm = cpm;
         localStorage.setItem(cpmKey, cpm);
     })
+    // Number of Character
+    let noChar = document.getElementById("random");
+    noChar.value = getNoChar()
+    localStorage.setItem("noChar", getNoChar());
+    noChar.addEventListener('change', e => {
+        let noChar = e.target.value;
+        //       if (mmm) mmm.cpm = noChar;
+        localStorage.setItem("noChar", noChar);
+        if (mmm) 
+            mmm.getRandomWord()
 
-    let freqInputField = document.getElementById("freq"); 
+    })
+
+    let random_btn = document.getElementById("random_btn")
+    random_btn.onclick = e => {
+        setMorseMachine();
+        mmm.playRandom();
+    };
+
+    let random_next = document.getElementById("random_next_btn")
+    random_next.onclick = e => {
+        setMorseMachine();
+        mmm.nextRandom();
+    };
+
+    let freqInputField = document.getElementById("freq");
     freqInputField.value = getFrequency();
-    freqInputField.onchange = ( e => {
+    freqInputField.onchange = (e => {
         let freq = e.target.value;
         if (mmm) mmm.frequency = freq;
         localStorage.setItem('frequency', freq);
-    } );
+    });
 
-    let volumeInputField = document.getElementById("volume"); 
+    let volumeInputField = document.getElementById("volume");
     volumeInputField.value = getVolume();
-    volumeInputField.onchange = ( e => {
+    volumeInputField.onchange = (e => {
         let volume = e.target.value;
         if (mmm) mmm.volume = volume;
         localStorage.setItem('volume', volume);
-    } );
+    });
 
 
     let morseInputField = document.getElementById("txt");
@@ -456,7 +503,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     document.getElementById("gof").onclick = e => {
         setMorseMachine();
         document.getElementById("gof").classList.add("nodisplay");
-        document.getElementById("gof-stop").classList.remove("nodisplay");        
+        document.getElementById("gof-stop").classList.remove("nodisplay");
         let repeat = document.getElementById("repeat").value;
         let factor = document.getElementById("ff").value;
         mmm.playGroupOfFive(repeat, factor);
@@ -464,6 +511,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     document.getElementById("gof-stop").onclick = e => {
         mmm.stopGroupOfFive();
-    }    
+    }
     morseInputField.focus();
 });

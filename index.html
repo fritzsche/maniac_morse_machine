@@ -40,7 +40,19 @@
     </p>
   </div>
 
+  <h2 class="setclear">Random Word</h2>
+  <p>
+    <label for="random"> Number of Characters </label> <input id="random" type="number" min="2" max="10" step="1" value="3">
+  </p>
+  <p class="setclear random_btn button">
+    <button id="random_btn">Play Random Word</button>
+    <button id="random_next_btn" class="nodisplay">Next Word</button>    
+  </p>
+  <p>
+  <div id="random_result"></div>
+</p>
   <h2 class="setclear">Groups of Five</h2>
+
   <div class="explain">
     <p>Play groups of five characters.</p>
   </div> 
@@ -50,7 +62,7 @@
   <p>
     <label for="repeat">Number of Groups</label> <input id="repeat" type="number" min="1" max="200" step="1" value="2">
   </p>
-  <p class="setclear gof">
+  <p class="setclear button">
     <button id="gof">Play Groups of Five</button>
     <button class="nodisplay" id="gof-stop">Stop Groups of Five</button>    
   </p>
